@@ -1,26 +1,36 @@
 <template>
-  <img alt="Vue logo" src="./assets/logo.png">
-  <HelloWorld msg="Welcome to Your Vue.js App"/>
+<v-app>
+<app-navigation />
+<v-main>
+  <router-view/>
+</v-main>
+<v-footer>
+<div>
+    &copy; {{ currentYear }} — Property Portal
+</div>
+</v-footer>
+</v-app>
 </template>
-
 <script>
-import HelloWorld from './components/HelloWorld.vue'
+import AppNavigation from './components/AppNavigation.vue'
+import { computed } from 'vue'
 
 export default {
-  name: 'App',
-  components: {
-    HelloWorld
-  }
-}
-</script>
+name: 'App',
+components: {
+AppNavigation
+},
+setup() {
+const currentYear = computed(() => new Date().getFullYear())
 
-<style>
-#app {
-  font-family: Avenir, Helvetica, Arial, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  text-align: center;
-  color: #2c3e50;
-  margin-top: 60px;
+return {
+  currentYear
 }
+}
+}
+
+</script>
+<style>
+/* Global styles */
+
 </style>
