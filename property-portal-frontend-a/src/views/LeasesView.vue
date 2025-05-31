@@ -1,156 +1,116 @@
 <template>
-<div class="leases-container"> <v-container>
+<div>
+<v-container>
 <h1>
-Lease Management
+Lease Agreements
 
 </h1>
-  <!-- Filters and Actions -->
-<v-card>
-<v-row>
-<v-col>
-<v-text-field
-           v-model="searchQuery"
-           label="Search Leases"
-           prepend-inner-icon="mdi-magnify"
-           clearable
-           hide-details
-           density="compact"
-         ></v-text-field>
-
-</v-col>
-<v-col>
-<v-select
-           v-model="statusFilter"
-           :items="statusOptions"
-           label="Status"
-           clearable
-           hide-details
-           density="compact"
-         ></v-select>
-
-</v-col>
-<v-col>
-<v-select
-           v-model="propertyFilter"
-           :items="propertyOptions"
-           label="Property"
-           clearable
-           hide-details
-           density="compact"
-         ></v-select>
-
-</v-col>
-<v-col>
-<v-btn>
-          Add New Lease
-</v-btn>
-</v-col>
-</v-row>
-</v-card>
-  <!-- Leases Table -->
-  <v-card>
-    <v-data-table
-      :headers="headers"
-      :items="leases"
-      :loading="loading"
-      :items-per-page="10"
-      :items-per-page-options="[5, 10, 25, 50]"
-      class="elevation-1"
-    >
-      <template v-slot:item.status="{ item }">
-<v-chip>
-          {{ item.status }}
-</v-chip>
-</template>
-<template>
-        {{ formatDate(item.startDate) }}
-</template>
-<template>
-        {{ formatDate(item.endDate) }}
-</template>
-<template>
-<v-icon>
-          mdi-pencil
-</v-icon>
-<v-icon>
-          mdi-eye
-</v-icon>
-</template>
-<template>
-<div>
-<v-icon>
-            mdi-file-document-outline
-</v-icon>
-<p>
-No lease agreements found
-
-</p>
-<v-btn>
-            Refresh
-</v-btn>
-</div>
-</template>
-    </v-data-table>
-  </v-card>
-  
-  <!-- Upcoming Renewals Card -->
+  <!-- Feature Banner -->
+  <v-card class="mb-6 bg-primary text-white" flat>
+    <v-card-text>
+      <div class="d-flex flex-column flex-md-row align-center">
+        <div>
 <h2>
-Upcoming Renewals
+Manage Lease Agreements
 
 </h2>
+<p>
+            Track, create, and manage all lease agreements in one place
+</p>
+</div>
+<v-spacer></v-spacer>
+
+<v-btn>
+<v-icon>
+mdi-plus
+
+</v-icon>
+          New Lease Agreement
+</v-btn>
+      </div>
+    </v-card-text>
+  </v-card>
+
+  <!-- Development Notice -->
+<v-alert>
+    The lease management feature is currently under development. This is a placeholder view.
+</v-alert>
+  <!-- Content Cards -->
 <v-row>
+    <!-- Active Leases Card -->
 <v-col>
 <v-card>
 <v-card-title>
-{{ renewal.propertyName }}
-
-</v-card-title>
-<v-card-subtitle>
 <v-icon>
-mdi-account
+mdi-check-circle
 
 </v-icon>
-          {{ renewal.tenantName }}
-</v-card-subtitle>
+          Active Leases
+</v-card-title>
 <v-card-text>
 <div>
-<span>
-Expiration Date:
+0
 
-</span>
-<span>
-{{ formatDate(renewal.endDate) }}
-
-</span>
 </div>
-<div>
-<span>
-Monthly Rent:
-
-</span>
-<span>
-${{ renewal.rent.toLocaleString() }}
-
-</span>
-</div>
-<div>
-<span>
-Days Left:
-
-</span>
-<span>
-{{ renewal.daysLeft }}
-
-</span>
-</div>
+<p>
+            No active leases found in the system
+</p>
 </v-card-text>
 <v-card-actions>
 <v-btn>
-Renew Lease
+View Details
 
 </v-btn>
-<v-spacer></v-spacer>
+</v-card-actions>
+  </v-card>
+</v-col>
+    <!-- Expiring Soon Card -->
+<v-col>
+<v-card>
+<v-card-title>
+<v-icon>
+mdi-clock-alert
 
+</v-icon>
+          Expiring Soon
+</v-card-title>
+<v-card-text>
+<div>
+0
+
+</div>
+<p>
+            No leases expiring in the next 30 days
+</p>
+</v-card-text>
+<v-card-actions>
+<v-btn>
+View Details
+
+</v-btn>
+</v-card-actions>
+</v-card>
+</v-col>
+    <!-- Renewal Opportunities Card -->
+<v-col>
+<v-card>
+<v-card-title>
+<v-icon>
+mdi-refresh
+
+</v-icon>
+          Renewal Opportunities
+</v-card-title>
+<v-card-text>
+<div>
+0
+
+</div>
+<p>
+            No renewal opportunities available
+</p>
+</v-card-text>
+<v-card-actions>
 <v-btn>
 View Details
 
@@ -159,140 +119,56 @@ View Details
 </v-card>
 </v-col>
 </v-row>
+  <!-- Coming Soon Features -->
+<h2>
+Coming Soon
+
+</h2>
+<v-row>
+<v-col>
+<v-card>
+<v-card-title>
+Lease Templates
+
+</v-card-title>
+<v-card-text>
+          Create and manage standardized lease templates to streamline the creation process.
+</v-card-text>
+</v-card>
+</v-col>
+<v-col>
+<v-card>
+<v-card-title>
+Digital Signing
+
+</v-card-title>
+<v-card-text>
+          Enable tenants and owners to sign lease agreements electronically.
+</v-card-text>
+</v-card>
+</v-col>
+<v-col>
+<v-card>
+<v-card-title>
+Automatic Reminders
+
+</v-card-title>
+<v-card-text>
+          Set up notifications for lease expirations, renewals, and other important dates.
+</v-card-text>
+</v-card>
+</v-col>
+</v-row>
 </v-container>
-</div> </template>
+</div>
+</template>
 <script>
 export default {
 name: 'LeasesView',
 data() {
 return {
-loading: false,
-searchQuery: '',
-statusFilter: '',
-propertyFilter: '',
-statusOptions: ['Active', 'Pending', 'Expired', 'Terminated'],
-propertyOptions: ['Oakwood Apartments', 'Sunset Heights', 'Riverfront Condos', 'Pine Street Houses'],
-headers: [
-{ title: 'Property', key: 'propertyName' },
-{ title: 'Tenant', key: 'tenantName' },
-{ title: 'Start Date', key: 'startDate' },
-{ title: 'End Date', key: 'endDate' },
-{ title: 'Rent', key: 'rent' },
-{ title: 'Status', key: 'status' },
-{ title: 'Actions', key: 'actions', sortable: false }
-],
-leases: [
-{
-id: 1,
-propertyName: 'Oakwood Apartments, Unit 101',
-tenantName: 'John Smith',
-startDate: '2023-01-01',
-endDate: '2024-01-01',
-rent: 1250,
-status: 'Active'
-},
-{
-id: 2,
-propertyName: 'Sunset Heights, Unit 305',
-tenantName: 'Emily Johnson',
-startDate: '2023-03-15',
-endDate: '2024-03-15',
-rent: 1800,
-status: 'Active'
-},
-{
-id: 3,
-propertyName: 'Riverfront Condos, Unit 212',
-tenantName: 'Michael Brown',
-startDate: '2022-07-01',
-endDate: '2023-06-30',
-rent: 2100,
-status: 'Expired'
-},
-{
-id: 4,
-propertyName: 'Pine Street Houses, Unit 7B',
-tenantName: 'Sarah Williams',
-startDate: '2023-05-01',
-endDate: '2023-10-31',
-rent: 1500,
-status: 'Pending'
-},
-{
-id: 5,
-propertyName: 'Oakwood Apartments, Unit 205',
-tenantName: 'Robert Davis',
-startDate: '2022-10-15',
-endDate: '2023-10-15',
-rent: 1300,
-status: 'Terminated'
+leases: []
 }
-],
-upcomingRenewals: [
-{
-id: 2,
-propertyName: 'Sunset Heights, Unit 305',
-tenantName: 'Emily Johnson',
-endDate: '2024-03-15',
-rent: 1800,
-daysLeft: 45
-},
-{
-id: 4,
-propertyName: 'Pine Street Houses, Unit 7B',
-tenantName: 'Sarah Williams',
-endDate: '2023-10-31',
-rent: 1500,
-daysLeft: 12
-},
-{
-id: 5,
-propertyName: 'Oakwood Apartments, Unit 205',
-tenantName: 'Robert Davis',
-endDate: '2023-10-15',
-rent: 1300,
-daysLeft: 5
-}
-]
-}
-},
-methods: {
-fetchLeases() {
-// Simulate API call
-this.loading = true
-setTimeout(() => {
-this.loading = false
-}, 1000)
-},
-formatDate(dateString) {
-const options = { year: 'numeric', month: 'short', day: 'numeric' }
-return new Date(dateString).toLocaleDateString(undefined, options)
-},
-getStatusColor(status) {
-switch (status) {
-case 'Active': return 'success'
-case 'Pending': return 'warning'
-case 'Expired': return 'error'
-case 'Terminated': return 'grey'
-default: return 'primary'
-}
-},
-getDaysLeftClass(days) {
-if (days <= 7) return 'text-error font-weight-bold'
-if (days <= 30) return 'text-warning font-weight-bold'
-return 'text-primary'
-},
-editLease(lease) {
-console.log('Edit lease', lease.id)
-// Implement edit functionality
-},
-viewLease(lease) {
-console.log('View lease', lease.id)
-// Implement view details functionality
-}
-},
-mounted() {
-this.fetchLeases()
 }
 }
 
@@ -300,6 +176,13 @@ this.fetchLeases()
 <style>
 .leases-container {
 min-height: 80vh;
+}
+.feature-card {
+height: 100%;
+transition: transform 0.2s;
+}
+.feature-card:hover {
+transform: translateY(-5px);
 }
 
 </style>
