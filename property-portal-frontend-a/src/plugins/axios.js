@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 // Base URL configuration
-axios.defaults.baseURL = process.env.VUE_APP_API_URL || 'http://localhost:8080/api'
+axios.defaults.baseURL = process.env.VUE_APP_API_URL || 'http://localhost:8080'
 
 // Request interceptor
 axios.interceptors.request.use(

@@ -29,7 +29,7 @@ Try adjusting your search filters
 1"
 v-model="currentPage"
 :length="totalPages"
-@update:modelValue="$emit('page-changed', $event)"
+@update:modelValue="handlePageChange"
 >
 
 </v-pagination>
@@ -47,7 +47,8 @@ PropertyCard
 props: {
 properties: {
 type: Array,
-required: true
+required: true,
+default: () => []
 },
 loading: {
 type: Boolean,
@@ -63,6 +64,22 @@ return {
 currentPage: 1
 }
 },
+computed: {
+displayProperties() {
+// This ensures the prop is used in computation
+return this.properties.map(property => ({
+id: property.id,
+title: property.title || 'Unnamed Property',
+price: property.price || 0,
+propertyType: property.propertyType || 'UNKNOWN',
+bedrooms: property.bedrooms || 0,
+bathrooms: property.bathrooms || 0,
+address: property.address || 'No address provided',
+imageUrl: property.imageUrl,
+listingType: property.listingType || 'SALE'
+}));
+}
+},
 watch: {
 totalPages: {
 handler(newVal) {
@@ -71,6 +88,12 @@ this.currentPage = newVal
 }
 },
 immediate: true
+}
+},
+methods: {
+handlePageChange(page) {
+this.currentPage = page;
+this.$emit('page-changed', page);
 }
 }
 }

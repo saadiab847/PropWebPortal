@@ -67,7 +67,14 @@ name: 'PropertyCard',
 props: {
 property: {
 type: Object,
-required: true
+required: true,
+// Add validator to ensure the property object has required fields
+validator: function(obj) {
+return obj &&
+typeof obj.id !== 'undefined' &&
+typeof obj.title !== 'undefined' &&
+typeof obj.price !== 'undefined';
+}
 }
 }
 }

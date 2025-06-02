@@ -1,271 +1,314 @@
 <template>
-<div>
 <v-container>
+<v-row>
+<v-col>
 <h1>
 Available Properties
 
 </h1>
-<property-filters
-@filter-changed="updateFilters"
-:initial-filters="filters"
-></property-filters>
+    <!-- Debug info - can be removed in production -->
+<v-card>
+<div>
+<strong>
+Debug:
 
-  <v-card class="view-toggle-card pa-2 mb-4">
-    <div class="d-flex justify-space-between align-center">
-      <div>
+</strong>
+Properties Length: {{ properties ? properties.length : 'null' }}
+
+</div>
+<div>
+<strong>
+Loading:
+
+</strong>
+{{ loading }}
+
+</div>
+</v-card>
+    <!-- Search filters section - keep as is -->
+    
+    <!-- Loading indicator -->
+<v-progress-linear
+       v-if="loading"
+       indeterminate
+       color="primary"
+       class="mb-4"
+     ></v-progress-linear>
+
+    <!-- Property listings grid -->
+    <v-row v-if="!loading && properties && properties.length > 0">
+      <v-col 
+        v-for="(property, index) in properties" 
+        :key="index" 
+        cols="12" sm="6" md="4" lg="3"
+      >
+<v-card>
+          <!-- Property image -->
+<v-img
+             :src="property.imageUrl"
+             height="200px"
+             cover
+           ></v-img>
+
+<v-card-title>
+            {{ property.title }}
+</v-card-title>
+<v-card-text>
+<div>
+<v-icon>
+mdi-map-marker
+
+</v-icon>
 <span>
-          {{ totalProperties }} {{ totalProperties === 1 ? 'property' : 'properties' }} found
-</span>
-<span>
-          Searching properties...
+{{ property.location }}
+
 </span>
 </div>
 <div>
-<v-btn-toggle>
-<v-btn>
-            Newest
-</v-btn>
-<v-btn>
-            Price ↑
-</v-btn>
-<v-btn>
-            Price ↓
-</v-btn>
-</v-btn-toggle>
-</div>
-    </div>
-  </v-card>
-  
-  <!-- Error alert -->
-<v-alert>
-    {{ error }}
-</v-alert>
-<property-list
-:properties="properties"
-:loading="loading"
-:total-pages="totalPages"
-@page-changed="changePage"
-></property-list>
+<v-icon>
+mdi-home
 
-</v-container>
+</v-icon>
+<span>
+{{ property.propertyType }}
+
+</span>
 </div>
+<div>
+              <div class="d-flex align-center">
+<v-icon>
+mdi-bed
+
+</v-icon>
+<span>
+{{ property.bedrooms }}
+
+</span>
+</div>
+<div>
+<v-icon>
+mdi-shower
+
+</v-icon>
+<span>
+{{ property.bathrooms }}
+
+</span>
+</div>
+<div>
+<v-icon>
+mdi-ruler-square
+
+</v-icon>
+<span>
+{{ property.area }} ft²
+
+</span>
+</div>
+            </div>
+</v-card-text>
+<v-divider></v-divider>
+
+<v-card-actions>
+<v-spacer></v-spacer>
+
+<div>
+${{ property.price.toLocaleString() }}
+
+</div>
+</v-card-actions>
+</v-card>
+</v-col>
+</v-row>
+    <!-- Empty state - FIXED: only show when there are NO properties -->
+<!-- <v-card>
+<v-icon>
+mdi-home-search
+
+</v-icon>
+<h3>
+No properties found
+
+</h3>
+<p>
+Try adjusting your filters or check back later for new listings
+
+</p>
+</v-card> -->
+    <!-- Enhanced pagination -->
+<div>
+<!-- 0 && totalPages > 1"
+class="pagination-container mt-6"
+> -->
+<v-card class="d-flex flex-column align-center pa-4">
+<div class="text-subtitle-1 mb-2">
+Showing {{ (currentPage - 1) * pageSize + 1 }} -
+{{ Math.min(currentPage * pageSize, totalProperties) }}
+of {{ totalProperties }} properties
+
+</div>
+<v-pagination
+v-model="currentPage"
+:length="totalPages"
+:total-visible="7"
+@update:modelValue="changePage"
+rounded
+elevation="2"
+></v-pagination>
+
+      </v-card>
+    </div>
+  </v-col>
+</v-row>
+</v-container>
 </template>
 <script>
-import PropertyList from '../components/properties/PropertyList.vue'
-import PropertyFilters from '../components/properties/PropertyFilters.vue'
-import PropertiesService from '../services/PropertiesService'
+import PropertyService from '@/services/PropertyService';
 
 export default {
 name: 'PropertiesView',
-components: {
-PropertyList,
-PropertyFilters
-},
+
 data() {
 return {
-properties: [],
+debug: false, // Set to false for production
 loading: false,
-error: null,
+properties: [],
 totalProperties: 0,
-totalPages: 1,
 currentPage: 1,
 pageSize: 12,
-sortBy: 'newest',
+totalPages: 0,
 filters: {
-keyword: '',
-propertyType: '',
-listingType: '',
-bedrooms: '',
-priceRange: [0, 2000000]
-}
-}
+location: '',
+propertyType: null,
+minPrice: null,
+maxPrice: null
 },
-computed: {
-// Prepare sort parameter for API
-sortParameter() {
-switch (this.sortBy) {
-case 'price_asc':
-return 'price,asc'
-case 'price_desc':
-return 'price,desc'
-case 'newest':
-default:
-return 'createdAt,desc'
-}
+propertyTypes: [
+'Apartment',
+'House',
+'Condo',
+'Townhouse',
+'Villa',
+'Commercial'
+]
+};
 },
 
-// Prepare API query options
-queryOptions() {
-  const options = {
-    page: this.currentPage - 1, // API uses 0-based indexing
-    size: this.pageSize,
-    sort: this.sortParameter,
-  }
-  
-  // Add filter parameters if they have values
-  if (this.filters.keyword) {
-    options.search = this.filters.keyword
-  }
-  
-  if (this.filters.propertyType) {
-    options.propertyType = this.filters.propertyType
-  }
-  
-  if (this.filters.listingType) {
-    options.listingType = this.filters.listingType
-  }
-  
-  if (this.filters.bedrooms) {
-    options.bedrooms = this.filters.bedrooms === '5+' ? 5 : this.filters.bedrooms
-  }
-  
-  if (this.filters.priceRange && this.filters.priceRange.length === 2) {
-    options.minPrice = this.filters.priceRange[0]
-    options.maxPrice = this.filters.priceRange[1]
-  }
-  
-  return options
-}
+created() {
+this.loadProperties();
 },
-mounted() {
-// Check for query parameters in URL
-this.parseQueryParams()
-// Fetch properties
-this.fetchProperties()
-},
+
 methods: {
-// Parse URL query parameters to set initial filters
-parseQueryParams() {
-const params = new URLSearchParams(window.location.search)
+loadProperties() {
+this.loading = true;
+console.log('Loading properties...');
 
-  if (params.get('search')) {
-    this.filters.keyword = params.get('search')
-  }
+  // API uses 0-based indexing for pages
+  const page = this.currentPage - 1;
   
-  if (params.get('type')) {
-    this.filters.propertyType = params.get('type')
-  }
-  
-  if (params.get('listing')) {
-    this.filters.listingType = params.get('listing')
-  }
-  
-  if (params.get('bedrooms')) {
-    this.filters.bedrooms = params.get('bedrooms')
-  }
-  
-  if (params.get('page')) {
-    this.currentPage = parseInt(params.get('page')) || 1
-  }
-  
-  if (params.get('sort')) {
-    this.sortBy = params.get('sort')
-  }
+  PropertyService.getProperties(page, this.pageSize, this.filters)
+    .then(response => {
+      if (response && response.data) {
+        // Handle different API response structures
+        if (Array.isArray(response.data)) {
+          // Direct array response
+          this.processProperties(response.data);
+          this.totalProperties = response.data.length;
+          this.totalPages = 1;
+        } 
+        else if (response.data.content) {
+          // Paginated response with content property
+          this.processProperties(response.data.content);
+          this.totalProperties = response.data.totalElements || 0;
+          this.totalPages = response.data.totalPages || 0;
+        } 
+        else {
+          // Flat object structure with no content property
+          this.processProperties([response.data]); // Wrap single object in array
+          this.totalProperties = 1;
+          this.totalPages = 1;
+        }
+      } else {
+        console.error('Unexpected API response format');
+        this.properties = [];
+        this.totalProperties = 0;
+        this.totalPages = 0;
+      }
+    })
+    .catch(error => {
+      console.error('Error loading properties:', error);
+      this.properties = [];
+      this.totalProperties = 0;
+      this.totalPages = 0;
+    })
+    .finally(() => {
+      this.loading = false;
+    });
 },
 
-// Update browser URL with current filters
-updateQueryParams() {
-  const params = new URLSearchParams()
-  
-  if (this.filters.keyword) {
-    params.set('search', this.filters.keyword)
-  }
-  
-  if (this.filters.propertyType) {
-    params.set('type', this.filters.propertyType)
-  }
-  
-  if (this.filters.listingType) {
-    params.set('listing', this.filters.listingType)
-  }
-  
-  if (this.filters.bedrooms) {
-    params.set('bedrooms', this.filters.bedrooms)
-  }
-  
-  if (this.currentPage > 1) {
-    params.set('page', this.currentPage.toString())
-  }
-  
-  if (this.sortBy !== 'newest') {
-    params.set('sort', this.sortBy)
-  }
-  
-  const queryString = params.toString()
-  const url = queryString 
-    ? `${window.location.pathname}?${queryString}` 
-    : window.location.pathname
-    
-  window.history.replaceState({}, '', url)
+// Process properties with uniform structure
+processProperties(data) {
+  // Map each property to ensure consistent structure
+  this.properties = data.map(p => ({
+    id: p.id || 0,
+    title: p.title || 'Untitled Property',
+    location: p.location || 'Unknown Location',
+    price: p.price || 0,
+    imageUrl: p.imageUrl || 'https://via.placeholder.com/300x200?text=Property+Image',
+    propertyType: p.propertyType || 'Unknown Type',
+    bedrooms: p.bedrooms || 0,
+    bathrooms: p.bathrooms || 0,
+    area: p.area || 0
+  }));
 },
 
-// Update filters from filter component
-updateFilters(newFilters) {
-  this.filters = newFilters
-  this.currentPage = 1
-  this.fetchProperties()
-},
-
-// Change page
 changePage(page) {
-  this.currentPage = page
-  this.fetchProperties()
+  this.currentPage = page;
+  // Scroll to top when changing pages
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  this.loadProperties();
 },
 
-// Fetch properties from backend
-async fetchProperties() {
-  this.loading = true
-  this.error = null
-  
-  try {
-    // Update URL query parameters
-    this.updateQueryParams()
-    
-    // Call API service
-    const result = await PropertiesService.getProperties(this.queryOptions)
-    
-    if (result.error) {
-      this.error = result.error
-      return
-    }
-    
-    // Update component data with response
-    const responseData = result.data
-    this.properties = responseData.content || []
-    this.totalProperties = responseData.totalElements || 0
-    this.totalPages = responseData.totalPages || 1
-    
-    // If current page is greater than total pages, go to last page
-    if (this.currentPage > this.totalPages && this.totalPages > 0) {
-      this.currentPage = this.totalPages
-      this.fetchProperties()
-    }
-  } catch (error) {
-    console.error('Error in fetchProperties:', error)
-    this.error = 'An unexpected error occurred while fetching properties'
-    this.properties = []
-    this.totalProperties = 0
-    this.totalPages = 1
-  } finally {
-    this.loading = false
-  }
-}
+resetFilters() {
+  this.filters = {
+    location: '',
+    propertyType: null,
+    minPrice: null,
+    maxPrice: null
+  };
+  this.currentPage = 1;
+  this.loadProperties();
 },
-watch: {
-// Watch sort selection for changes
-sortBy() {
-this.fetchProperties()
+
+applyFilters() {
+  this.currentPage = 1; // Reset to first page when applying filters
+  this.loadProperties();
 }
 }
-}
+};
 
 </script>
 <style>
-.properties-container {
-min-block-size: 80vh;
+.v-card-title {
+font-size: 1.1rem;
+line-height: 1.4;
+height: 56px;
+overflow: hidden;
 }
-.view-toggle-card {
-background-color: #f9f9f9;
+
+.property-card {
+transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.property-card:hover {
+transform: translateY(-5px);
+box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2) !important;
+}
+
+.pagination-container {
+width: 100%;
+display: flex;
+justify-content: center;
 }
 
 </style>
