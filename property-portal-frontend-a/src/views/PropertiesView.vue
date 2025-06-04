@@ -6,6 +6,17 @@
 Available Properties
 
 </h1>
+</v-col>
+<v-col>
+<div>
+      <!-- Search dropdown -->
+<v-select v-model="searchCriteria" :items="searchOptions"></v-select>
+
+    </div>
+</v-col>
+</v-row>
+<v-row>
+<v-col>
     <!-- Debug info - can be removed in production -->
 <v-card>
 <div>
@@ -25,23 +36,57 @@ Loading:
 
 </div>
 </v-card>
-    <!-- Search filters section - keep as is -->
+    <!-- Search input field - appears when search criteria is selected -->
+    <v-card class="mb-4" v-if="searchCriteria !== 'none'">
+      <v-card-text>
+        <v-row>
+          <v-col cols="12" md="8">
+<v-text-field
+v-model="searchQuery"
+:label="`Search ${searchCriteria !== 'none' ? 'by ' + searchCriteria : ''}`"
+variant="outlined"
+density="compact"
+hide-details
+class="mr-3"
+style="max-inline-size: 250px;"
+append-inner-icon="mdi-magnify"
+@keyup.enter="applySearch"
+:disabled="searchCriteria === 'none'">
+</v-text-field>
+</v-col>
+</v-row>
+</v-card-text>
+</v-card>
+
+</v-col>
+<v-col>
+<v-btn @click="applySearch" color="primary" >
+Search
+</v-btn>
+<v-btn @click="clearSearch">
+Clear
+</v-btn>
+</v-col>
+</v-row>
+
+    <v-card>
     
     <!-- Loading indicator -->
 <v-progress-linear
-       v-if="loading"
-       indeterminate
-       color="primary"
-       class="mb-4"
+        v-if="loading"
+        indeterminate
+        color="primary"
+        class="mb-4"
      ></v-progress-linear>
 
-    <!-- Property listings grid -->
-    <v-row v-if="!loading && properties && properties.length > 0">
-      <v-col 
-        v-for="(property, index) in properties" 
-        :key="index" 
-        cols="12" sm="6" md="4" lg="3"
-      >
+</v-card>
+<v-row>
+<v-col>
+
+<v-row>
+<v-col>
+<v-row v-if="!loading && properties && properties.length > 0">
+  <v-col v-for="(property, index) in properties" :key="index" cols="12" sm="6" md="4" lg="3">
 <v-card>
           <!-- Property image -->
 <v-img
@@ -120,26 +165,8 @@ ${{ property.price.toLocaleString() }}
 </v-card>
 </v-col>
 </v-row>
-    <!-- Empty state - FIXED: only show when there are NO properties -->
-<!-- <v-card>
-<v-icon>
-mdi-home-search
 
-</v-icon>
-<h3>
-No properties found
-
-</h3>
-<p>
-Try adjusting your filters or check back later for new listings
-
-</p>
-</v-card> -->
-    <!-- Enhanced pagination -->
 <div>
-<!-- 0 && totalPages > 1"
-class="pagination-container mt-6"
-> -->
 <v-card class="d-flex flex-column align-center pa-4">
 <div class="text-subtitle-1 mb-2">
 Showing {{ (currentPage - 1) * pageSize + 1 }} -
@@ -156,12 +183,17 @@ rounded
 elevation="2"
 ></v-pagination>
 
-      </v-card>
-    </div>
-  </v-col>
+</v-card>
+</div>
+
+</v-col>
+</v-row>
+</v-col>
 </v-row>
 </v-container>
 </template>
+
+
 <script>
 import PropertyService from '@/services/PropertyService';
 
@@ -177,24 +209,38 @@ totalProperties: 0,
 currentPage: 1,
 pageSize: 12,
 totalPages: 0,
-filters: {
-location: '',
-propertyType: null,
-minPrice: null,
-maxPrice: null
-},
-propertyTypes: [
-'Apartment',
-'House',
-'Condo',
-'Townhouse',
-'Villa',
-'Commercial'
-]
+
+  // New search related data
+  searchCriteria: 'none',
+  searchQuery: '',
+  searchOptions: [
+    { title: 'None', value: 'none' },
+    { title: 'ID', value: 'id' },
+    { title: 'Type', value: 'type' },
+    { title: 'City', value: 'city' },
+    { title: 'Availability', value: 'availability' }
+  ],
+  
+  // Original filters
+  filters: {
+    location: '',
+    propertyType: null,
+    minPrice: null,
+    maxPrice: null
+  },
+  propertyTypes: [
+    'Apartment',
+    'House',
+    'Condo',
+    'Townhouse',
+    'Villa',
+    'Commercial'
+  ]
 };
 },
 
 created() {
+this.searchCriteria = 'none'; // Explicitly set default value
 this.loadProperties();
 },
 
@@ -206,7 +252,13 @@ console.log('Loading properties...');
   // API uses 0-based indexing for pages
   const page = this.currentPage - 1;
   
-  PropertyService.getProperties(page, this.pageSize, this.filters)
+  // Add search criteria to filters if applicable
+  const searchFilters = { ...this.filters };
+  if (this.searchCriteria !== 'none' && this.searchQuery) {
+    searchFilters[this.searchCriteria] = this.searchQuery;
+  }
+  
+  PropertyService.getProperties(page, this.pageSize, searchFilters)
     .then(response => {
       if (response && response.data) {
         // Handle different API response structures
@@ -269,6 +321,69 @@ changePage(page) {
   this.loadProperties();
 },
 
+// New search methods
+// Update the applySearch method in PropertiesView.vue
+applySearch() {
+  if (this.searchCriteria === 'none' || !this.searchQuery.trim()) {
+    return;
+  }
+  
+  this.loading = true;
+  this.currentPage = 1; // Reset to first page when searching
+  
+  // Use the dedicated search method
+  PropertyService.searchProperties(
+    this.searchCriteria,
+    this.searchQuery,
+    this.currentPage - 1,
+    this.pageSize,
+    this.filters
+  )
+  .then(response => {
+    if (response && response.data) {
+      // Handle different API response structures
+      if (Array.isArray(response.data)) {
+        // Direct array response
+        this.processProperties(response.data);
+        this.totalProperties = response.data.length;
+        this.totalPages = 1;
+      } 
+      else if (response.data.content) {
+        // Paginated response with content property
+        this.processProperties(response.data.content);
+        this.totalProperties = response.data.totalElements || 0;
+        this.totalPages = response.data.totalPages || 0;
+      } 
+      else {
+        // Flat object structure with no content property
+        this.processProperties([response.data]); // Wrap single object in array
+        this.totalProperties = 1;
+        this.totalPages = 1;
+      }
+    } else {
+      console.error('Unexpected API response format');
+      this.properties = [];
+      this.totalProperties = 0;
+      this.totalPages = 0;
+    }
+  })
+  .catch(error => {
+    console.error('Error searching properties:', error);
+    this.properties = [];
+    this.totalProperties = 0;
+    this.totalPages = 0;
+  })
+  .finally(() => {
+    this.loading = false;
+  });
+},
+clearSearch() {
+  this.searchQuery = '';
+  this.currentPage = 1;
+  this.loadProperties();
+},
+
+// Original filter methods
 resetFilters() {
   this.filters = {
     location: '',
@@ -276,6 +391,8 @@ resetFilters() {
     minPrice: null,
     maxPrice: null
   };
+  this.searchCriteria = 'none';
+  this.searchQuery = '';
   this.currentPage = 1;
   this.loadProperties();
 },
@@ -288,6 +405,7 @@ applyFilters() {
 };
 
 </script>
+
 <style>
 .v-card-title {
 font-size: 1.1rem;
@@ -309,6 +427,10 @@ box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2) !important;
 width: 100%;
 display: flex;
 justify-content: center;
+}
+
+.search-select {
+z-index: 10;
 }
 
 </style>

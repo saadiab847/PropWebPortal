@@ -86,6 +86,10 @@ public class Property {
     public void preUpdate() {
         updatedAt = LocalDateTime.now();
     }
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "tenant_id", nullable = false)
+    private Tenant tenant;
     
     public enum PropertyType {
         APARTMENT, HOUSE, CONDO, TOWNHOUSE, LAND, COMMERCIAL
