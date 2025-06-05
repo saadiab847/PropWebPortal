@@ -1,9 +1,13 @@
 package com.propertyportal.service;
 
 import com.propertyportal.dto.PropertyDTO;
+import com.propertyportal.exception.ResourceNotFoundException;
 import com.propertyportal.model.Property;
 import com.propertyportal.model.Property.PropertyType;
+import com.propertyportal.model.Tenant;
 import com.propertyportal.repository.PropertyRepository;
+import com.propertyportal.repository.TenantRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -11,17 +15,19 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 @Service
 @Transactional
 public class PropertyService {
     
     private final PropertyRepository propertyRepository;
+    private final TenantRepository tenantRepository;
     
     @Autowired
-    public PropertyService(PropertyRepository propertyRepository) {
+    public PropertyService(PropertyRepository propertyRepository, TenantRepository tenantRepository) {
         this.propertyRepository = propertyRepository;
+        this.tenantRepository = tenantRepository;
     }
+    
     
     public List<PropertyDTO> getAllProperties() {
         return propertyRepository.findAll().stream()
@@ -60,9 +66,15 @@ public class PropertyService {
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
+
+
     
     // Convert Property entity to PropertyDTO
     private PropertyDTO convertToDTO(Property property) {
+        Long tenantId = null;
+        if (property.getTenant() != null) {
+            tenantId = property.getTenant().getId();
+        }
         return new PropertyDTO(
             property.getId(),
             property.getTitle(),
@@ -76,7 +88,8 @@ public class PropertyService {
             property.getBedrooms(),
             property.getBathrooms(),
             property.getSquareFootage(),
-            property.getIsAvailable()
+            property.getIsAvailable(),
+            tenantId
         );
     }
     
@@ -96,6 +109,11 @@ public class PropertyService {
         property.setBathrooms(dto.bathrooms());
         property.setSquareFootage(dto.squareFootage());
         property.setIsAvailable(dto.isAvailable());
+        // Handle tenant relationship - use the standard findById method
+        if (dto.tenant_id() != null) {  // Assuming the method is named tenantId() in your record
+            tenantRepository.findById(dto.tenant_id())
+                .ifPresent(property::setTenant);
+        }
         return property;
     }
 }

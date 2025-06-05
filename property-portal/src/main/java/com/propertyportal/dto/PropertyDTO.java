@@ -44,7 +44,12 @@ public record PropertyDTO(
     Double squareFootage,
     
     @Schema(description = "Indicates if the property is available for sale/rent", example = "true", defaultValue = "true")
-    Boolean isAvailable
+    Boolean isAvailable,
+
+
+    @Schema(description = "Indicates if the property belongs to which tenant", example = "1", defaultValue = "0")
+    Long tenant_id 
+    
 ) {
     // Compact constructor with validation
     public PropertyDTO {
@@ -56,6 +61,9 @@ public record PropertyDTO(
         }
         if (address == null || address.isBlank()) {
             throw new IllegalArgumentException("Address cannot be empty");
+        }
+        if (tenant_id == null ) {
+            throw new IllegalArgumentException("Tenant Id cannot be empty");
         }
     }
 }

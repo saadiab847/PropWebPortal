@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Optional;
 
 import com.propertyportal.converter.PropertyTypeConverter;
 
@@ -90,6 +91,7 @@ public class Property {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "tenant_id", nullable = false)
     private Tenant tenant;
+
     
     public enum PropertyType {
         APARTMENT, HOUSE, CONDO, TOWNHOUSE, LAND, COMMERCIAL

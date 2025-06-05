@@ -143,7 +143,8 @@ public class PropertyController {
                         propertyDTO.bedrooms(),
                         propertyDTO.bathrooms(),
                         propertyDTO.squareFootage(),
-                        propertyDTO.isAvailable()
+                        propertyDTO.isAvailable(),
+                        propertyDTO.tenant_id()
                     );
                     return ResponseEntity.ok(propertyService.saveProperty(updatedDTO));
                 })

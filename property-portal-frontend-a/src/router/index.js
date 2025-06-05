@@ -75,7 +75,7 @@ const routes = [
 
 // Create router instance
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHistory(process.env.BASE_URL || '/'),
   routes,
   scrollBehavior(to, from, savedPosition) {
     // Scroll to top on navigation, or restore saved position
