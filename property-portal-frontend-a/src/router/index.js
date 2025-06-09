@@ -1,5 +1,4 @@
 import { createRouter, createWebHistory } from 'vue-router'
-
 // Route components - you may need to adjust these paths to match your project structure
 const HomeView = () => import('../views/HomeView.vue')
 const PropertiesView = () => import('../views/PropertiesView.vue')
