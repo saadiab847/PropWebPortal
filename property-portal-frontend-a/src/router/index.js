@@ -2,6 +2,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 // Route components - you may need to adjust these paths to match your project structure
 const HomeView = () => import('../views/HomeView.vue')
 const PropertiesView = () => import('../views/PropertiesView.vue')
+const TenantsView = () => import('../views/TenantsView.vue')
 
 // Define routes
 const routes = [
@@ -23,11 +24,8 @@ const routes = [
   },
   {
     path: '/tenants',
-    name: 'tenants',
-    component: () => import('../views/TenantsView.vue'),
-    meta: {
-      title: 'Tenants - Property Portal'
-    }
+    name: 'Tenants',
+    component: TenantsView
   },
   {
     path: '/owners',
