@@ -173,13 +173,13 @@ this.fetchTenants();
 
 methods: {
 async fetchTenants() {
-try {
-this.loading = true;
-const params = {
-page: this.page - 1, // API is 0-based
-size: this.pageSize,
-sort: 'lastName,asc'
-};
+  try {
+    this.loading = true;
+    const params = {
+      page: this.page - 1, // API is 0-based
+      size: this.pageSize,
+      sort: 'ASC' // updated to match backend expectation
+    };
 
     if (this.filters.search) {
       params.search = this.filters.search;
