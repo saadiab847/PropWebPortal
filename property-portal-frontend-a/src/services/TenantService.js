@@ -3,35 +3,25 @@ import axios from 'axios';
 const API_URL = process.env.VUE_APP_API_URL || 'http://localhost:8080/api';
 
 export default {
-/**
- * Get all tenants with optional pagination, sorting, and filtering
- * @param {Object} params - Query parameters
- * @param {Number} params.page - Page number (0-based)
- * @param {Number} params.size - Page size
- * @param {String} params.sort - Sort direction ('ASC' or 'DESC')
- * @param {String} params.search - Search term
- * @returns {Promise} - Promise containing tenant data
- */
-getTenants(params = {}) {
-  // Clean up parameters to match backend expectations
-  const apiParams = { ...params };
-  
-  // Handle sort parameter format according to backend requirements
-  if (params.sort && params.sort.includes(',')) {
-    // If format is 'fieldName,direction', extract just the direction
-    const sortParts = params.sort.split(',');
-    apiParams.sort = sortParts[1].toUpperCase(); // Convert 'asc' to 'ASC'
-  }
-  
-  return axios.get(`${API_URL}/tenants`, { params: apiParams })
-    .then(response => {
-      return this.processTenants(response.data);
-    })
-    .catch(error => {
-      console.error('Error fetching tenants:', error);
-      throw error;
-    });
-},
+  /**
+   * Get all tenants with optional pagination, sorting, and filtering
+   * @param {Object} params - Query parameters
+   * @param {Number} params.page - Page number (0-based)
+   * @param {Number} params.size - Page size
+   * @param {String} params.sort - Sort field and direction (e.g. 'name,asc')
+   * @param {String} params.search - Search term
+   * @returns {Promise} - Promise containing tenant data
+   */
+  getTenants(params = {}) {
+    return axios.get(`${API_URL}/tenants`, { params })
+      .then(response => {
+        return this.processTenants(response.data);
+      })
+      .catch(error => {
+        console.error('Error fetching tenants:', error);
+        throw error;
+      });
+  },
 
   /**
    * Process tenant data from various response formats

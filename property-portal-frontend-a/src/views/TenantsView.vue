@@ -1,3 +1,4 @@
+<!-- src/views/TenantsView.vue -->
 <template>
 <v-container>
 <v-row>
@@ -57,11 +58,13 @@ mdi-filter
 
 <!-- Tenants Grid -->
 <v-row>
+0">
+
 <v-col>
     <v-card
       class="mx-auto tenant-card"
       elevation="2"
-      :to="'/tenants/' + tenant.id"
+      :to="tenant?.id ? '/tenants/' + tenant.id : '#'"
       hover
     >
 <v-avatar>
@@ -72,10 +75,10 @@ mdi-filter
 
 </v-avatar>
 <v-card-title>
-        {{ tenant.firstName }} {{ tenant.lastName }}
+        {{ tenant.firstName || '' }} {{ tenant.lastName || '' }}
 </v-card-title>
 <v-card-subtitle>
-        {{ tenant.email }}
+        {{ tenant.email || 'No email provided' }}
 </v-card-subtitle>
       <v-card-text>
         <v-row dense>
@@ -104,13 +107,22 @@ mdi-calendar
       </v-card-text>
 <v-card-actions>
 <v-chip>
-          {{ tenant.status }}
+          {{ tenant.status || 'Unknown' }}
 </v-chip>
 </v-card-actions>
     </v-card>
   </v-col>
 </v-row>
 
+<!-- No Tenants Found -->
+<v-row>
+<v-col>
+<v-alert>
+No tenants found
+
+</v-alert>
+</v-col>
+</v-row>
 <!-- Loading State -->
 <v-row>
 <v-col>
@@ -135,7 +147,7 @@ Loading tenants...
 v-model="page"
 :length="totalPages"
 @input="fetchTenants"
-total-visible="7"
+:total-visible="7"
 ></v-pagination>
 
 <p>
@@ -172,36 +184,43 @@ this.fetchTenants();
 },
 
 methods: {
-async fetchTenants() {
-  try {
-    this.loading = true;
-    const params = {
-      page: this.page - 1, // API is 0-based
-      size: this.pageSize,
-      sort: 'ASC' // updated to match backend expectation
-    };
+fetchTenants() {
+// Set loading state before API call
+this.loading = true;
 
-    if (this.filters.search) {
-      params.search = this.filters.search;
-    }
+  const params = {
+    page: this.page - 1, // API is 0-based
+    size: this.pageSize,
+    sort: 'ASC'
+  };
 
-    if (this.filters.status && this.filters.status !== 'All') {
-      params.status = this.filters.status;
-    }
-
-    const response = await TenantService.getTenants(params);
-    this.tenants = response.content;
-    this.totalElements = response.totalElements;
-    this.totalPages = response.totalPages;
-  } catch (error) {
-    this.error = 'Failed to load tenants';
-    console.error('Error fetching tenants:', error);
-  } finally {
-    this.loading = false;
+  if (this.filters.search) {
+    params.search = this.filters.search;
   }
+
+  if (this.filters.status && this.filters.status !== 'All') {
+    params.status = this.filters.status;
+  }
+
+  TenantService.getTenants(params)
+    .then(response => {
+      this.tenants = response.content || [];
+      this.totalElements = response.totalElements || 0;
+      this.totalPages = response.totalPages || 0;
+    })
+    .catch(error => {
+      this.error = 'Failed to load tenants';
+      console.error('Error fetching tenants:', error);
+      this.tenants = [];
+    })
+    .finally(() => {
+      // Always set loading to false when done, whether success or error
+      this.loading = false;
+    });
 },
 
 getPropertyInfo(tenant) {
+  if (!tenant) return 'No property assigned';
   if (tenant.property) {
     return tenant.property.name || `Property #${tenant.property.id}`;
   }
