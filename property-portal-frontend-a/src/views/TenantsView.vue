@@ -55,6 +55,21 @@ mdi-filter
   </v-col>
 </v-row>
 
+<!-- Loading State -->
+<v-row>
+<v-col>
+<v-progress-circular
+   indeterminate
+   color="primary"
+   size="64"
+ ></v-progress-circular>
+
+<p>
+Loading tenants...
+
+</p>
+</v-col>
+</v-row>
 <!-- Tenants Grid -->
 <v-row v-if="!loading && tenants && tenants.length > 0">
   <v-col
@@ -117,21 +132,17 @@ mdi-calendar
 </v-card-actions>
 </v-card>
 </v-col> </v-row> 
-<!-- Loading State -->
+
+<!-- No Results -->
 <v-row>
 <v-col>
-<v-progress-circular
-       indeterminate
-       color="primary"
-       size="64"
-     ></v-progress-circular>
+<v-alert>
+No tenants found
 
-<p>
-Loading tenants...
-
-</p>
+</v-alert>
 </v-col>
 </v-row>
+
 <!-- Pagination -->
 <v-row>
 1">
@@ -141,11 +152,11 @@ Loading tenants...
 v-model="page"
 :length="totalPages"
 @input="fetchTenants"
-total-visible="7"
+:total-visible="7"
 ></v-pagination>
 
 <p>
-      Showing {{ tenants.length }} of {{ totalElements }} tenants
+  Showing {{ tenants.length }} of {{ totalElements }} tenants
 </p>
 </v-col>
 </v-row>
@@ -179,12 +190,12 @@ this.fetchTenants();
 
 methods: {
 async fetchTenants() {
+  this.loading = true;
   try {
-    this.loading = true;
     const params = {
       page: this.page - 1, // API is 0-based
       size: this.pageSize,
-      sort: 'ASC' // Updated to match backend API expectations
+      sort: 'ASC'
     };
 
     if (this.filters.search) {
@@ -196,12 +207,13 @@ async fetchTenants() {
     }
 
     const response = await TenantService.getTenants(params);
-    this.tenants = response.content;
-    this.totalElements = response.totalElements;
-    this.totalPages = response.totalPages;
+    this.tenants = response.content || [];
+    this.totalElements = response.totalElements || 0;
+    this.totalPages = response.totalPages || 0;
   } catch (error) {
     this.error = 'Failed to load tenants';
     console.error('Error fetching tenants:', error);
+    this.tenants = [];
   } finally {
     this.loading = false;
   }
