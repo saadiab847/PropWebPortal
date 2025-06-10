@@ -1,4 +1,3 @@
-<!-- src/views/TenantsView.vue -->
 <template>
 <v-container>
 <v-row>
@@ -56,7 +55,7 @@ mdi-filter
   </v-col>
 </v-row>
 
-<!-- Tenants Grid -->
+<!-- Tenants Grid - This is the section you specifically asked to add back -->
 <v-row>
 0">
 
@@ -64,21 +63,19 @@ mdi-filter
     <v-card
       class="mx-auto tenant-card"
       elevation="2"
-      :to="tenant?.id ? '/tenants/' + tenant.id : '#'"
+      :to="tenant && tenant.id ? '/tenants/' + tenant.id : ''"
       hover
     >
+
 <v-avatar>
-<v-img
-           :src="tenant.profileImageUrl || '/img/default-avatar.png'"
-           alt="Tenant Avatar"
-         ></v-img>
+<v-img :src="tenant?.profileImageUrl || '/assets/default-avatar.png'" alt="Tenant Avatar"></v-img>
 
 </v-avatar>
 <v-card-title>
-        {{ tenant.firstName || '' }} {{ tenant.lastName || '' }}
+        {{ tenant?.firstName || '' }} {{ tenant?.lastName || '' }}
 </v-card-title>
 <v-card-subtitle>
-        {{ tenant.email || 'No email provided' }}
+        {{ tenant?.email || 'No email provided' }}
 </v-card-subtitle>
       <v-card-text>
         <v-row dense>
@@ -87,7 +84,7 @@ mdi-filter
 mdi-phone
 
 </v-icon>
-            {{ tenant.phone || 'No phone provided' }}
+            {{ tenant?.phone || 'No phone provided' }}
 </v-col>
 <v-col>
 <v-icon>
@@ -101,44 +98,33 @@ mdi-home
 mdi-calendar
 
 </v-icon>
-            Since: {{ formatDate(tenant.leaseStartDate) }}
+            Since: {{ formatDate(tenant?.leaseStartDate) }}
 </v-col>
 </v-row>
       </v-card-text>
 <v-card-actions>
 <v-chip>
-          {{ tenant.status || 'Unknown' }}
+          {{ tenant?.status || 'Unknown' }}
 </v-chip>
 </v-card-actions>
     </v-card>
   </v-col>
 </v-row>
 
-<!-- No Tenants Found -->
-<v-row>
-<v-col>
-<v-alert>
-No tenants found
-
-</v-alert>
-</v-col>
-</v-row>
-<!-- Loading State -->
-<v-row>
-<v-col>
+<!-- Loading State - Keep simple for now -->
+<div>
 <v-progress-circular
-       indeterminate
-       color="primary"
-       size="64"
-     ></v-progress-circular>
+     indeterminate
+     color="primary"
+     size="64"
+   ></v-progress-circular>
 
 <p>
 Loading tenants...
 
 </p>
-</v-col>
-</v-row>
-<!-- Pagination -->
+</div>
+<!-- Pagination - Simplified -->
 <v-row>
 1">
 
@@ -150,9 +136,6 @@ v-model="page"
 :total-visible="7"
 ></v-pagination>
 
-<p>
-      Showing {{ tenants.length }} of {{ totalElements }} tenants
-</p>
 </v-col>
 </v-row>
 </v-container>
@@ -184,53 +167,124 @@ this.fetchTenants();
 },
 
 methods: {
-fetchTenants() {
-// Set loading state before API call
+// Simplified fetch method
+async fetchTenants() {
+console.log("Fetching tenants...");
 this.loading = true;
 
-  const params = {
-    page: this.page - 1, // API is 0-based
-    size: this.pageSize,
-    sort: 'ASC'
-  };
+  try {
+    const params = {
+      page: this.page - 1,
+      size: this.pageSize,
+      sort: 'ASC'
+    };
 
-  if (this.filters.search) {
-    params.search = this.filters.search;
+    if (this.filters.search) {
+      params.search = this.filters.search;
+    }
+
+    if (this.filters.status && this.filters.status !== 'All') {
+      params.status = this.filters.status;
+    }
+
+    console.log("Calling API with params:", params);
+    const response = await TenantService.getTenants(params);
+    console.log("API response:", response);
+    const responseData = response.data || response;
+
+// Log the full response for debugging
+console.log('Raw API response:', responseData);
+
+if (responseData && typeof responseData === 'object') {
+  // Case 1: Spring Data paginated response (standard format from backend)
+  // This matches the structure we're seeing in the error: {content: Array(1), totalPages: 1, totalElements: 1, ...}
+  if (Array.isArray(responseData.content)) {
+    this.tenants = responseData.content;
+    this.totalElements = responseData.totalElements || 0;
+    this.totalPages = responseData.totalPages || 0;
+    console.log('Processed as Spring Data pagination format');
+  }
+  // Case 2: Direct array response
+  else if (Array.isArray(responseData)) {
+    this.tenants = responseData;
+    this.totalElements = responseData.length;
+    this.totalPages = 1;
+    console.log('Processed as direct array');
+  }
+  // Case 3: Nested pagination object with content
+  else if (responseData.page && Array.isArray(responseData.page.content)) {
+    this.tenants = responseData.page.content;
+    this.totalElements = responseData.page.totalElements || 0;
+    this.totalPages = responseData.page.totalPages || 0;
+    console.log('Processed as nested pagination object');
+  }
+  // Case 4: Single tenant object
+  else if (responseData.id) {
+    this.tenants = [responseData];
+    this.totalElements = 1;
+    this.totalPages = 1;
+    console.log('Processed as single tenant object');
+  }
+  // Case 5: Unexpected format but has some identifiable structure
+  else if (responseData.content && typeof responseData.content === 'object' && !Array.isArray(responseData.content)) {
+    // Handle nested content object that isn't an array
+    const extractedContent = responseData.content.content || [];
+    this.tenants = Array.isArray(extractedContent) ? extractedContent : [];
+    this.totalElements = responseData.content.totalElements || responseData.totalElements || 0;
+    this.totalPages = responseData.content.totalPages || responseData.totalPages || 0;
+    console.log('Processed as nested content object');
+  }
+  // Case 6: Fallback for unexpected formats
+  else {
+    console.warn('Unrecognized API response format:', responseData);
+    this.tenants = [];
+    this.totalElements = 0;
+    this.totalPages = 0;
   }
 
-  if (this.filters.status && this.filters.status !== 'All') {
-    params.status = this.filters.status;
+  // Ensure tenants is always an array
+  if (!Array.isArray(this.tenants)) {
+    console.error('Tenants data is not an array after processing:', this.tenants);
+    this.tenants = [];
   }
-
-  TenantService.getTenants(params)
-    .then(response => {
-      this.tenants = response.content || [];
-      this.totalElements = response.totalElements || 0;
-      this.totalPages = response.totalPages || 0;
-    })
-    .catch(error => {
-      this.error = 'Failed to load tenants';
-      console.error('Error fetching tenants:', error);
-      this.tenants = [];
-    })
-    .finally(() => {
-      // Always set loading to false when done, whether success or error
-      this.loading = false;
-    });
+  
+  // Debug output
+  console.log('Processed tenants array:', this.tenants);
+  console.log('Total elements:', this.totalElements);
+  console.log('Total pages:', this.totalPages);
+} else {
+  console.error('Invalid API response:', responseData);
+  this.tenants = [];
+  this.totalElements = 0;
+  this.totalPages = 0;
+}
+    
+  } catch (error) {
+    console.error('Error fetching tenants:', error);
+    this.error = 'Failed to load tenants';
+    this.tenants = [];
+  } finally {
+    this.loading = false;
+    console.log("Loading finished, state:", this.loading);
+  }
 },
 
 getPropertyInfo(tenant) {
   if (!tenant) return 'No property assigned';
   if (tenant.property) {
-    return tenant.property.name || `Property #${tenant.property.id}`;
+    return tenant.property.name || `Property #${tenant.property.id || 'Unknown'}`;
   }
   return 'No property assigned';
 },
 
 formatDate(dateString) {
   if (!dateString) return 'N/A';
-  const date = new Date(dateString);
-  return date.toLocaleDateString();
+  try {
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  } catch (e) {
+    return 'Invalid Date';
+  }
 }
 }
 };
