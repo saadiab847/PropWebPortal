@@ -66,23 +66,7 @@ mdi-calendar
 </v-col>
 </v-row>
 <!-- Empty State - Show when no tenants and not loading -->
-<v-row>
-<v-col>
-<v-icon>
-mdi-account-off
-
-</v-icon>
-<h3>
-No tenants found
-
-</h3>
-<p>
-Try changing your search criteria or add a new tenant.
-
-</p>
-</v-col>
-</v-row>
-<!-- Loading State -->
+ng State -->
 <v-row>
 <v-progress-circular indeterminate color="primary"></v-progress-circular>
 
@@ -114,7 +98,7 @@ import TenantService from '@/services/TenantService';
 export default {
   data() {
   return {
-    tenantService: new TenantService(),
+    TenantService: TenantService,
     tenants: [],
     loading: false,
     currentPage: 1,
