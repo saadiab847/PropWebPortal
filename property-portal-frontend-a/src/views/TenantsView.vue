@@ -62,22 +62,20 @@ mdi-filter
 <v-col>
     <v-card
       class="mx-auto tenant-card"
-      elevation="2",
+      elevation="2"
       :to="tenant && tenant.id ? '/tenants/' + tenant.id : ''"
       hover
     >
+
 <v-avatar>
-<v-img
-           :src="tenant.profileImageUrl || '/img/default-avatar.png'"
-           alt="Tenant Avatar"
-         ></v-img>
+<v-img :src="tenant?.profileImageUrl || '/assets/default-avatar.png'" alt="Tenant Avatar"></v-img>
 
 </v-avatar>
 <v-card-title>
-        {{ tenant.firstName || '' }} {{ tenant.lastName || '' }}
+        {{ tenant?.firstName || '' }} {{ tenant?.lastName || '' }}
 </v-card-title>
 <v-card-subtitle>
-        {{ tenant.email || 'No email provided' }}
+        {{ tenant?.email || 'No email provided' }}
 </v-card-subtitle>
       <v-card-text>
         <v-row dense>
@@ -86,7 +84,7 @@ mdi-filter
 mdi-phone
 
 </v-icon>
-            {{ tenant.phone || 'No phone provided' }}
+            {{ tenant?.phone || 'No phone provided' }}
 </v-col>
 <v-col>
 <v-icon>
@@ -100,13 +98,13 @@ mdi-home
 mdi-calendar
 
 </v-icon>
-            Since: {{ formatDate(tenant.leaseStartDate) }}
+            Since: {{ formatDate(tenant?.leaseStartDate) }}
 </v-col>
 </v-row>
       </v-card-text>
 <v-card-actions>
 <v-chip>
-          {{ tenant.status || 'Unknown' }}
+          {{ tenant?.status || 'Unknown' }}
 </v-chip>
 </v-card-actions>
     </v-card>
