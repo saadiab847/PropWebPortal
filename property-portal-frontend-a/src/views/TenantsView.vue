@@ -190,12 +190,55 @@ this.loading = true;
     console.log("Calling API with params:", params);
     const response = await TenantService.getTenants(params);
     console.log("API response:", response);
-    
-    this.tenants = response.content.content || [];
-    this.totalElements = response.totalElements || 0;
-    this.totalPages = response.totalPages || 0;
-    
-    console.log("Tenants loaded:", this.tenants.length);
+    const responseData = response.data || response;
+
+// Check if we have a valid response to process
+if (responseData) {
+  console.log('Processing API response:', responseData);
+
+  // Handle Spring Data pagination format (which matches your error message)
+  if (responseData.content && Array.isArray(responseData.content)) {
+    this.tenants = responseData.content;
+    this.totalElements = responseData.totalElements || 0;
+    this.totalPages = responseData.totalPages || 0;
+    console.log('Processed standard Spring pagination response');
+  }
+  // Handle direct array
+  else if (Array.isArray(responseData)) {
+    this.tenants = responseData;
+    this.totalElements = responseData.length;
+    this.totalPages = 1;
+    console.log('Processed array response');
+  }
+  // Handle single tenant object
+  else if (responseData.id) {
+    this.tenants = [responseData]; // Wrap single object
+    this.totalElements = 1;
+    this.totalPages = 1;
+    console.log('Processed single tenant response');
+  }
+  // Handle unexpected structure
+  else {
+    console.error('Unrecognized API response structure:', responseData);
+    this.tenants = [];
+    this.totalElements = 0;
+    this.totalPages = 0;
+  }
+
+  // Safety check - ensure tenants is always an array
+  if (!Array.isArray(this.tenants)) {
+    console.error('Tenants data is not an array after processing:', this.tenants);
+    this.tenants = [];
+  }
+
+  console.log('Final processed tenants:', this.tenants);
+  console.log(`Total: ${this.totalElements}, Pages: ${this.totalPages}`);
+} else {
+  console.error('Empty or invalid API response');
+  this.tenants = [];
+  this.totalElements = 0;
+  this.totalPages = 0;
+}
   } catch (error) {
     console.error('Error fetching tenants:', error);
     this.error = 'Failed to load tenants';
