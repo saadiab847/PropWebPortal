@@ -114,6 +114,7 @@ import TenantService from '@/services/TenantService';
 export default {
   data() {
   return {
+    tenantService: new TenantService(),
     tenants: [],
     loading: false,
     currentPage: 1,
