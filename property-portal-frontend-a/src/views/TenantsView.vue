@@ -111,6 +111,37 @@ export default {
     error: null
   };
 },
+  // Add this lifecycle hook to fetch data when component mounts
+mounted() {
+    console.log('TenantsView component mounted, calling fetchTenants');
+    this.fetchTenants();
+},
+// Add watchers to react to parameter changes
+watch: {
+    // Reload when page changes
+    currentPage() {
+      console.log('Page changed, calling fetchTenants');
+      this.fetchTenants();
+    },
+    
+    // Reload when items per page changes
+    itemsPerPage() {
+      console.log('Items per page changed, calling fetchTenants');
+      this.currentPage = 1; // Reset to first page
+      this.fetchTenants();
+    },
+    
+    // Reload when sort parameters change
+    sortBy() {
+      console.log('Sort field changed, calling fetchTenants');
+      this.fetchTenants();
+    },
+    
+    sortDirection() {
+      console.log('Sort direction changed, calling fetchTenants');
+      this.fetchTenants();
+    }
+  },
 
 computed: {
   computedPaginationText() {
@@ -119,6 +150,7 @@ computed: {
     return `${start} - ${end} of ${this.totalElements} tenants`;
   }
 },
+
 
 methods: {
   async fetchTenants() {
