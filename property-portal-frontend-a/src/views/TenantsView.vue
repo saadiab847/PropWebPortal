@@ -66,110 +66,6 @@ mdi-calendar
 </v-col>
 </v-row>
 <!-- Empty State - Show when no tenants and not loading -->
-<v-row>
-<v-col>
-<v-icon>
-mdi-account-off
-
-</v-icon>
-<h3>
-No tenants found
-
-</h3>
-<p>
-Try changing your search criteria or add a new tenant.
-
-</p>
-</v-col>
-</v-row>
-<!-- Loading State -->
-<v-row>
-<v-progress-circular indeterminate color="primary"></v-progress-circular>
-
-</v-row>
-<!-- Pagination -->
-<div>
-0" class="text-center py-3">
-<div class="text-subtitle-2 text-grey mb-2">
-Showing {{ computedPaginationText }}
-
-</div>
-<v-pagination>
-1"
-v-model="currentPage"
-:length="totalPages"
-:total-visible="7"
-@input="handlePageChange"
->
-
-</v-pagination>
-</div>
-<!-- Debug Information -->
-<div>
-<div>Debug: Tenants Length: {{ tenants ? tenants.length : 0 }}
-</div>
-<div>
-Loading: {{ loading }}
-
-</div>
-</div> <!-- Tenant Cards -->
-<v-row>
-<v-col>
-<v-card>
-<v-card-title>
-      {{ tenant?.name || 'Unnamed Tenant' }}
-</v-card-title>
-<v-card-text>
-<div>
-<v-icon>
-mdi-map-marker
-
-</v-icon>
-        {{ tenant?.address || 'Unknown Location' }}
-</div>
-<div>
-<v-icon>
-mdi-home
-
-</v-icon>
-        {{ tenant?.propertyName || 'Unassigned' }}
-</div>
-<div>
-<v-icon>
-mdi-email
-
-</v-icon>
-        {{ tenant?.email || 'No email' }}
-</div>
-<div>
-<v-icon>
-mdi-phone
-
-</v-icon>
-        {{ tenant?.phone || 'No phone' }}
-</div>
-<div>
-<v-icon>
-mdi-calendar
-
-</v-icon>
-        {{ formatDate(tenant?.leaseStartDate) }}
-</div>
-</v-card-text>
-<v-divider></v-divider>
-
-<v-card-actions>
-<v-chip>
-        {{ tenant?.status || 'Unknown' }}
-</v-chip>
-<v-btn>
-        Details
-</v-btn>
-</v-card-actions>
-</v-card>
-</v-col>
-</v-row>
-<!-- Empty State - Show when no tenants and not loading -->
 ng State -->
 <v-row>
 <v-progress-circular indeterminate color="primary"></v-progress-circular>
@@ -196,11 +92,7 @@ v-model="currentPage"
 </template>
 
 
-
-
 <script>
-import TenantService from '@/services/TenantService';
-
 import TenantService from '@/services/TenantService';
 
 export default {
@@ -309,34 +201,6 @@ methods: {
   }
 };
 </script>
-<style>
-.v-card-title {
-font-size: 1.1rem;
-line-height: 1.4;
-height: 56px;
-overflow: hidden;
-}
-
-.property-card {
-transition: transform 0.3s, box-shadow 0.3s;
-}
-
-.property-card:hover {
-transform: translateY(-5px);
-box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2) !important;
-}
-
-.pagination-container {
-width: 100%;
-display: flex;
-justify-content: center;
-}
-
-.search-select {
-z-index: 10;
-}
-
-</style>
 <style>
 .v-card-title {
 font-size: 1.1rem;
