@@ -9,63 +9,73 @@ Loading: {{ loading }}
 
 </div>
 </div> <!-- Tenant Cards -->
+<div>
+0" class="tenant-grid">
+<v-container fluid>
 <v-row>
-<v-col>
-<v-card>
+<!-- Loop through tenants array -->
+<v-col v-for="(tenant, index) in tenants" 
+          :key="tenant.id || index" 
+          cols="12" sm="6" md="4" lg="3">
+<v-card elevation="2" class="tenant-card">
+
 <v-card-title>
-      {{ tenant?.name || 'Unnamed Tenant' }}
+        {{ tenant.name || '' }} ({{ tenant.tenantCode || '' }})
 </v-card-title>
-<v-card-text>
-<div>
-<v-icon>
-mdi-map-marker
+      <v-card-text>
+        <div class="tenant-info">
+<p>
+<strong>
+Email:
 
-</v-icon>
-        {{ tenant?.address || 'Unknown Location' }}
-</div>
-<div>
-<v-icon>
-mdi-home
+</strong>
+{{ tenant.email || 'N/A' }}
 
-</v-icon>
-        {{ tenant?.propertyName || 'Unassigned' }}
-</div>
-<div>
-<v-icon>
-mdi-email
+</p>
+<p>
+<strong>
+Phone:
 
-</v-icon>
-        {{ tenant?.email || 'No email' }}
-</div>
-<div>
-<v-icon>
-mdi-phone
+</strong>
+{{ tenant.phone || 'N/A' }}
 
-</v-icon>
-        {{ tenant?.phone || 'No phone' }}
-</div>
-<div>
-<v-icon>
-mdi-calendar
+</p>
+<p>
+<strong>
+Property:
 
-</v-icon>
-        {{ formatDate(tenant?.leaseStartDate) }}
-</div>
-</v-card-text>
-<v-divider></v-divider>
+</strong>
+{{ getPropertyInfo(tenant) || 'N/A' }}
 
-<v-card-actions>
+</p>
+<p>
+<strong>
+Lease Start:
+
+</strong>
+{{ formatDate(tenant.leaseStartDate) || 'N/A' }}
+
+</p>
+<p>
+<strong>
+Status:
+
+</strong>
 <v-chip>
-        {{ tenant?.status || 'Unknown' }}
+              {{ tenant.status || 'Unknown' }}
 </v-chip>
+</p>
+</div>
+      </v-card-text>
+<v-card-actions>
 <v-btn>
-        Details
+          View Details
 </v-btn>
 </v-card-actions>
-</v-card>
-</v-col>
+    </v-card>
+  </v-col>
 </v-row>
-<!-- Empty State - Show when no tenants and not loading -->
+</v-container> </div>
 
 <v-row>
 <v-progress-circular indeterminate color="primary" v-show="loading"></v-progress-circular>
@@ -155,55 +165,25 @@ computed: {
 methods: {
 async fetchTenants() {
   this.loading = true;
-  console.log('Starting fetchTenants method');
+  console.log('Starting to fetch tenants with params:', {
+    page: this.currentPage - 1, // Converting from 1-based to 0-based
+    size: this.itemsPerPage,
+    sort: this.sortBy,
+    direction: this.sortDirection
+  });
   
   try {
-    // Define default parameters based on your requirements
-    const params = {
-      page: 0,       // Start with first page (0-indexed)
-      size: 10,      // Default page size
-      sort: 'asc'    // Default sort direction
-    };
-
-    // Override defaults with component state if available
-    if (this.currentPage !== undefined) {
-      params.page = this.currentPage - 1; // Convert from 1-based UI to 0-based API
-    }
+    // Fix params to match exactly what the backend expects
+    const response = await TenantService.getTenants({
+      'page': 0,  // Hardcode to 0 for testing
+      'size': 10, // Use a reasonable size for testing
+      'sort': 'asc' // Simplify sort parameter
+    });
     
-    if (this.itemsPerPage !== undefined) {
-      params.size = this.itemsPerPage;
-    }
-    
-    // Handle sort parameters
-    if (this.sortBy) {
-      // If backend expects combined format like "lastName,asc"
-      // params.sort = `${this.sortBy},${this.sortDirection || 'asc'}`;
-      
-      // Or if it expects separate parameters:
-      params.sort = this.sortBy;
-      params.direction = this.sortDirection || 'asc';
-    }
-    
-    // Log the exact parameters being sent to the API
-    console.log('Sending API parameters:', params);
-    
-    // Get API response from service
-    const response = await TenantService.getTenants(params);
-    
-    // Check if response exists
-    if (!response) {
-      console.error('API returned no response');
-      this.tenants = [];
-      this.totalElements = 0;
-      this.totalPages = 0;
-      return;
-    }
-    
-    console.log('Full API response object:', response);
+    // Log raw response before processing
+    console.log('API call returned successfully');
     const responseData = response.data;
-    
-    // Log the full response for debugging
-    console.log('Raw API response data:', responseData);
+    console.log('Raw API response:', responseData);
     if (responseData && typeof responseData === 'object') {
       // Case 1: Spring Data paginated response (standard format from backend)
       // This matches the structure we're seeing in the error: {content: Array(1), totalPages: 1, totalElements: 1, ...}
@@ -266,8 +246,16 @@ async fetchTenants() {
       this.totalElements = 0;
       this.totalPages = 0;
     }
-  } catch (error) {
-    console.error('Error fetching tenants:', error);
+ } catch (error) {
+    console.error('Error fetching tenants - details:', error);
+    if (error.response) {
+      console.error('Error response data:', error.response.data);
+      console.error('Error response status:', error.response.status);
+    } else if (error.request) {
+      console.error('No response received from server');
+    } else {
+      console.error('Error setting up request:', error.message);
+    }
     this.tenants = [];
     this.totalElements = 0;
     this.totalPages = 0;
@@ -275,23 +263,36 @@ async fetchTenants() {
     this.loading = false;
   }
 },
-  
-  getTenantStatusColor(status) {
-    if (!status) return 'grey';
-    
-    const statusMap = {
-      'active': 'success',
-      'inactive': 'grey',
-      'pending': 'warning',
-      'terminated': 'error'
-    };
-    
-    return statusMap[status.toLowerCase()] || 'blue-grey';
+ getPropertyInfo(tenant) {
+    if (!tenant) return 'N/A';
+    if (tenant.property) {
+      return tenant.property.name || tenant.property.address || 'Unnamed Property';
+    }
+    return 'No Property Assigned';
   },
   
-  formatDate(date) {
-    if (!date) return 'No date';
-    return new Date(date).toLocaleDateString();
+  formatDate(dateString) {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString();
+    } catch (e) {
+      console.error('Error formatting date:', e);
+      return dateString || 'N/A';
+    }
+  },
+  
+  getStatusColor(status) {
+    if (!status) return 'grey';
+    
+    const statusColors = {
+      'ACTIVE': 'green',
+      'PENDING': 'orange',
+      'EXPIRED': 'red',
+      'TERMINATED': 'red'
+    };
+    
+    return statusColors[status.toUpperCase()] || 'grey';
   },
   
   handlePageChange(page) {
