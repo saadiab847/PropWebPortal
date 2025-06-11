@@ -3,36 +3,24 @@ import axios from 'axios';
 const API_URL = process.env.VUE_APP_API_URL || 'http://localhost:8080/api';
 
   export default {
-/**
- * Get all tenants with optional pagination, sorting, and filtering
- * @param {Object} params - Query parameters
- * @param {Number} params.page - Page number (0-based)
- * @param {Number} params.size - Page size
- * @param {String} params.sort - Sort direction ('ASC' or 'DESC')
- * @param {String} params.search - Search term
- * @returns {Promise} - Promise containing tenant data
- */
-getTenants(params = {}) {
-  // Clean up parameters to match backend expectations
-  const apiParams = { ...params };
-  
-  // Handle sort parameter format according to backend requirements
-  if (params.sort && params.sort.includes(',')) {
-    // If format is 'fieldName,direction', extract just the direction
-    const sortParts = params.sort.split(',');
-    apiParams.sort = sortParts[1].toUpperCase(); // Convert 'asc' to 'ASC'
-  }
-  
-  return axios.get(`${API_URL}/tenants`, { params: apiParams })
-    .then(response => {
-      return this.processTenants(response.data);
-    })
-    .catch(error => {
-      console.error('Error fetching tenants:', error);
-      throw error;
-    });
-},
-
+  getTenants(params = {}) {
+    console.log('TenantService.getTenants called with params:', params);
+    
+    // Ensure all required parameters exist
+    const queryParams = {
+      page: params.page || 0,
+      size: params.size || 10,
+      sort: params.sort || 'asc'
+    };
+    
+    // Add direction if it exists
+    if (params.direction) {
+      queryParams.direction = params.direction;
+    }
+    
+    console.log('Final query parameters:', queryParams);
+    return axios.get('/api/tenants', { params: queryParams });
+  },
 
   /**
    * Process tenant data from various response formats

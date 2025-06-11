@@ -153,21 +153,57 @@ computed: {
 
 
 methods: {
-  async fetchTenants() {
+async fetchTenants() {
   this.loading = true;
+  console.log('Starting fetchTenants method');
+  
   try {
-    // Get API response from service
-    const response = await TenantService.getTenants({
-      page: this.currentPage - 1,  // API uses 0-based indexing
-      size: this.itemsPerPage,
-      sort: this.sortBy,
-      direction: this.sortDirection
-    });
+    // Define default parameters based on your requirements
+    const params = {
+      page: 0,       // Start with first page (0-indexed)
+      size: 10,      // Default page size
+      sort: 'asc'    // Default sort direction
+    };
+
+    // Override defaults with component state if available
+    if (this.currentPage !== undefined) {
+      params.page = this.currentPage - 1; // Convert from 1-based UI to 0-based API
+    }
     
+    if (this.itemsPerPage !== undefined) {
+      params.size = this.itemsPerPage;
+    }
+    
+    // Handle sort parameters
+    if (this.sortBy) {
+      // If backend expects combined format like "lastName,asc"
+      // params.sort = `${this.sortBy},${this.sortDirection || 'asc'}`;
+      
+      // Or if it expects separate parameters:
+      params.sort = this.sortBy;
+      params.direction = this.sortDirection || 'asc';
+    }
+    
+    // Log the exact parameters being sent to the API
+    console.log('Sending API parameters:', params);
+    
+    // Get API response from service
+    const response = await TenantService.getTenants(params);
+    
+    // Check if response exists
+    if (!response) {
+      console.error('API returned no response');
+      this.tenants = [];
+      this.totalElements = 0;
+      this.totalPages = 0;
+      return;
+    }
+    
+    console.log('Full API response object:', response);
     const responseData = response.data;
     
     // Log the full response for debugging
-    console.log('Raw API response:', responseData);
+    console.log('Raw API response data:', responseData);
     if (responseData && typeof responseData === 'object') {
       // Case 1: Spring Data paginated response (standard format from backend)
       // This matches the structure we're seeing in the error: {content: Array(1), totalPages: 1, totalElements: 1, ...}
