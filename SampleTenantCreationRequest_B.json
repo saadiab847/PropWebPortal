@@ -1,0 +1,53 @@
+{
+  "tenantCode": "TEN-2023-001",
+  "name": "Acme Properties LLC",
+  "organizationName": "Acme Corporation",
+  "organizationType": "COMPANY",
+  "contactPerson": "Jane Doe",
+  "email": "contact@acmeproperties.com",
+  "phone": "(555) 123-4567",
+  "addressLine1": "100 Business Plaza",
+  "addressLine2": "Suite 500",
+  "city": "San Francisco",
+  "state": "CA",
+  "zipCode": "94107",
+  "country": "USA",
+  "logoUrl": "https://storage.example.com/logos/acme-logo.png",
+  "primaryColor": "#4A90E2",
+  "timezone": "America/Los_Angeles",
+  "locale": "en_US",
+  "active": true,
+  "subscriptionPlan": "PROFESSIONAL",
+  "subscriptionStatus": "ACTIVE",
+  "trialEndsAt": "2025-07-15T00:00:00.000Z",
+  "properties": [
+    {
+      "title": "Luxury Downtown Apartment",
+      "description": "Modern apartment with high-end finishes and amenities in the heart of downtown.",
+      "propertyType": "APARTMENT",
+      "price": 425000,
+      "address": "555 Market Street",
+      "city": "San Francisco",
+      "state": "CA",
+      "zipCode": "94105",
+      "bedrooms": 2,
+      "bathrooms": 2,
+      "squareFootage": 1250,
+      "isAvailable": true
+    },
+    {
+      "title": "Suburban Family Home",
+      "description": "Spacious family home in quiet neighborhood with excellent schools nearby.",
+      "propertyType": "HOUSE",
+      "price": 875000,
+      "address": "123 Oak Lane",
+      "city": "Oakland",
+      "state": "CA",
+      "zipCode": "94611",
+      "bedrooms": 4,
+      "bathrooms": 3,
+      "squareFootage": 2800,
+      "isAvailable": true
+    }
+  ]
+}
